@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MealAI — What Can I Cook?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green: #2d6a4f;
+      --green-light: #52b788;
+      --green-pale: #d8f3dc;
+      --cream: #faf7f2;
+      --cream-dark: #f0ebe1;
+      --brown: #5c4033;
+      --text: #1c1c1c;
+      --text-muted: #6b6560;
+      --white: #ffffff;
+      --gold: #c9a84c;
+      --radius: 18px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .hero {
+      background: var(--green);
+      padding: 3.5rem 1.5rem 5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, #52b78822 0%, transparent 70%),
+                  radial-gradient(ellipse at 20% 80%, #c9a84c18 0%, transparent 60%);
+    }
+
+    .hero-tag {
+      display: inline-block;
+      background: var(--green-pale);
+      color: var(--green);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 30px;
+      margin-bottom: 1.2rem;
+      position: relative;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.4rem, 6vw, 3.8rem);
+      color: var(--white);
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .hero h1 span { color: #a8d5b5; }
+
+    .hero p {
+      color: #a8d5b5;
+      font-size: 1.05rem;
+      font-weight: 300;
+      max-width: 440px;
+      margin: 0 auto;
+      line-height: 1.7;
+      position: relative;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: -2.5rem auto 3rem;
+      padding: 0 1.25rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .unlock-bar {
+      background: #fffbef;
+      border: 1.5px solid var(--gold);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow);
+    }
+
+    .unlock-bar input {
+      flex: 1;
+      border: 1px solid #e5d9b6;
+      border-radius: 10px;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .unlock-bar input:focus { outline: none; border-color: var(--gold); }
+
+    .unlock-bar button {
+      padding: 0.6rem 1.2rem;
+      background: var(--gold);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 0.88rem;
+      transition: background 0.2s;
+    }
+
+    .unlock-bar button:hover { background: #b8943e; }
+
+    .form-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid #e8e2d8;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+    }
+
+    .form-card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      color: var(--brown);
+    }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    textarea, input[type="number"], select {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1.5px solid #e5e0d8;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: var(--cream);
+      color: var(--text);
+      transition: border 0.2s, background 0.2s;
+      margin-bottom: 1.25rem;
+      appearance: none;
+    }
+
+    textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+
+    textarea:focus, input:focus, select:focus {
+      outline: none;
+      border-color: var(--green-light);
+      background: #fff;
+    }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .uses-left {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin: -0.5rem 0 1rem;
+    }
+
+    .uses-left span { color: #c0392b; font-weight: 600; }
+
+    .btn-generate {
+      width: 100%;
+      padding: 1rem;
+      background: var(--green);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-generate:hover { background: #235c3f; }
+    .btn-generate:active { transform: scale(0.98); }
+    .btn-generate:disabled { background: #aaa; cursor: not-allowed; }
+
+    #results { margin-top: 0.5rem; }
+
+    .results-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: var(--brown);
+      margin-bottom: 1.25rem;
+      padding-left: 0.25rem;
+    }
+
+    .meal-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid #e8e2d8;
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .meal-card:nth-child(2) { animation-delay: 0.1s; }
+    .meal-card:nth-child(3) { animation-delay: 0.2s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .meal-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(0,0,0,0.13); }
+    .meal-card.cheapest { border: 2px solid var(--green-light); }
+
+    .meal-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .meal-body { padding: 1.4rem 1.5rem; }
+
+    .meal-badges {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .badge-cheapest { background: var(--green-pale); color: var(--green); }
+    .badge-time { background: var(--cream-dark); color: var(--text-muted); }
+    .badge-click { background: #f0eaf8; color: #7c3aed; margin-left: auto; font-size: 0.7rem; }
+
+    .meal-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .meal-cost {
+      display: flex;
+      gap: 1rem;
+      align-items: baseline;
+      margin-bottom: 0.9rem;
+    }
+
+    .cost-main { font-size: 1.5rem; font-weight: 600; color: var(--green); }
+    .cost-total { font-size: 0.88rem; color: var(--text-muted); }
+
+    .meal-desc {
+      font-size: 0.92rem;
+      color: #4a4540;
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+
+    .ingredients-needed {
+      background: var(--cream);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-left: 3px solid var(--gold);
+    }
+
+    .ingredients-have {
+      background: var(--green-pale);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      font-size: 0.85rem;
+      color: var(--green);
+      font-weight: 500;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--cream-dark);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p { font-size: 0.95rem; }
+    .loading small { font-size: 0.8rem; color: #aaa; margin-top: 0.3rem; display: block; }
+
+    .error {
+      background: #fff0f0;
+      border: 1px solid #f5c0c0;
+      border-radius: 12px;
+      padding: 1.25rem;
+      color: #c0392b;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+      background: var(--white);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+      animation: slideUp 0.25s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-image {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 24px 24px 0 0;
+      display: block;
+    }
+
+    .modal-body { padding: 1.75rem; }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+    }
+
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+      flex: 1;
+      padding-right: 1rem;
+    }
+
+    .modal-close {
+      background: var(--cream-dark);
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .modal-close:hover { background: #ddd; }
+
+    .modal-meta {
+      display: flex;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid #f0ebe1;
+      flex-wrap: wrap;
+    }
+
+    .modal-meta-item { font-size: 0.88rem; color: var(--text-muted); }
+    .modal-meta-item strong { color: var(--green); font-size: 1rem; display: block; }
+
+    .modal-section { margin-bottom: 1.5rem; }
+
+    .modal-section h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--brown);
+      margin-bottom: 0.75rem;
+    }
+
+    .ingredient-list { list-style: none; }
+
+    .ingredient-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f5f2ee;
+      font-size: 0.92rem;
+      color: var(--text);
+    }
+
+    .ingredient-list li::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green-light);
+      flex-shrink: 0;
+    }
+
+    .steps-list { list-style: none; counter-reset: steps; }
+
+    .steps-list li {
+      counter-increment: steps;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.92rem;
+      color: #4a4540;
+      line-height: 1.7;
+    }
+
+    .steps-list li::before {
+      content: counter(steps);
+      background: var(--green);
+      color: white;
+      font-weight: 600;
+      font-size: 0.78rem;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .modal-loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem 3rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    footer a { color: var(--green); font-weight: 600; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #e0d8cc, transparent);
+      margin: 0.5rem 0 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-tag">AI-Powered Meal Planner</div>
+  <h1>What can you <span>cook</span><br>tonight?</h1>
+  <p>Enter what's in your fridge and get 3 meal ideas with real cost estimates.</p>
+</div>
+
+<div class="container">
+
+  <div class="unlock-bar" id="unlockBar">
+    <span style="font-size:1.2rem;">🔑</span>
+    <input type="text" id="licenseInput" placeholder="Have a license key? Enter it here" />
+    <button onclick="applyLicense()">Unlock</button>
+  </div>
+
+  <div class="form-card">
+    <h2>What's in your fridge?</h2>
+
+    <label for="ingredients">Your ingredients</label>
+    <textarea id="ingredients" placeholder="e.g. chicken breast, garlic, lemon, pasta, olive oil, spinach, parmesan..."></textarea>
+
+    <div class="row">
+      <div>
+        <label for="budget">Weekly budget ($)</label>
+        <input type="number" id="budget" placeholder="e.g. 75" min="10" max="500" />
+      </div>
+      <div>
+        <label for="servings">Servings</label>
+        <select id="servings">
+          <option value="1">1 person</option>
+          <option value="2" selected>2 people</option>
+          <option value="4">4 people</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="uses-left" id="usesLeft"></div>
+
+    <button class="btn-generate" id="generate" onclick="generateMeals()">
+      Generate My Meal Plan →
+    </button>
+  </div>
+
+  <div id="results"></div>
+
+</div>
+
+<div class="divider"></div>
+
+<footer>
+  No license key? <a href="https://florescape356.gumroad.com/l/qeaeum" target="_blank">Get unlimited access for $9.99 →</a><br><br>
+  Made with MealAI · Powered by Claude AI
+</footer>
+
+<div id="modalContainer"></div>
+
+<script>
+  const API_KEY = "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";
+  const FREE_USES = 3;
+  const LICENSE_KEY = "MEALAI-2024-UNLOCK";
+
+  const FOOD_IMAGES = {
+    "chicken": "https://images.unsplash.com/photo-1598103442097-8b74394b95c5?w=800&q=80",
+    "pasta": "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&q=80",
+    "rice": "https://images.unsplash.com/photo-1516684732162-798a0062be99?w=800&q=80",
+    "salad": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
+    "soup": "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80",
+    "fish": "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&q=80",
+    "beef": "https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=800&q=80",
+    "tacos": "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&q=80",
+    "pizza": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800&q=80",
+    "stir": "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&q=80",
+    "curry": "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80",
+    "sandwich": "https://images.unsplash.com/photo-1539252554453-80ab65ce3586?w=800&q=80",
+    "egg": "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=800&q=80",
+    "default": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80"
+  };
+
+  function getFoodImage(mealName) {
+    const lower = mealName.toLowerCase();
+    for (const [key, url] of Object.entries(FOOD_IMAGES)) {
+      if (lower.includes(key)) return url;
+    }
+    return FOOD_IMAGES.default;
+  }
+
+  function getUsesLeft() {
+    const used = parseInt(localStorage.getItem("mealai_uses") || "0");
+    return Math.max(0, FREE_USES - used);
+  }
+
+  function isUnlocked() {
+    return localStorage.getItem("mealai_unlocked") === "true";
+  }
+
+  function applyLicense() {
+    const key = document.getElementById("licenseInput").value.trim();
+    if (key === LICENSE_KEY) {
+      localStorage.setItem("mealai_unlocked", "true");
+      document.getElementById("unlockBar").innerHTML = '<span style="color:var(--green);font-weight:600;padding:0.5rem 0;">✓ Unlimited access unlocked! Enjoy your meal plans.</span>';
+      updateUsesDisplay();
+    } else {
+      alert("Invalid license key. Purchase one below to unlock unlimited uses.");
+    }
+  }
+
+  function updateUsesDisplay() {
+    const el = document.getElementById("usesLeft");
+    if (isUnlocked()) {
+      el.innerHTML = '<span style="color:var(--green);">✓ Unlimited access active</span>';
+    } else {
+      const left = getUsesLeft();
+      el.innerHTML = left > 0
+        ? `${left} of ${FREE_USES} free meal plans remaining`
+        : `<span>No free plans left.</span> <a href="https://florescape356.gumroad.com/l/qeaeum" target="_blank" style="color:var(--green);font-weight:600;">Get unlimited access →</a>`;
+    }
+  }
+
+  async function generateMeals() {
+    const ingredients = document.getElementById("ingredients").value.trim();
+    const budget = document.getElementById("budget").value;
+    const servings = document.getElementById("servings").value;
+
+    if (!ingredients) { alert("Please enter some ingredients first!"); return; }
+
+    if (!isUnlocked()) {
+      const used = parseInt(localStorage.getItem("mealai_uses") || "0");
+      if (used >= FREE_USES) {
+        document.getElementById("results").innerHTML = `
+          <div class="error">
+            You've used all your free meal plans.<br><br>
+            <a href="https://florescape356.gumroad.com/l/qeaeum" target="_blank" style="color:var(--green);font-weight:600;">Get unlimited access for $9.99 →</a>
+          </div>`;
+        return;
+      }
+      localStorage.setItem("mealai_uses", used + 1);
+      updateUsesDisplay();
+    }
+
+    const btn = document.getElementById("generate");
+    btn.disabled = true;
+    btn.textContent = "Finding your meals...";
+
+    document.getElementById("results").innerHTML = `
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Crafting your personalized meal plan...</p>
+        <small>This takes about 5–10 seconds</small>
+      </div>`;
+
+    const prompt = `You are a helpful meal planning assistant. Based on the ingredients provided, suggest exactly 3 meal ideas.
+
+Ingredients available: ${ingredients}
+Weekly grocery budget: $${budget || "flexible"}
+Servings: ${servings}
+
+Return ONLY a JSON array (no markdown, no explanation) in this exact format:
+[
+  {
+    "name": "Meal Name",
+    "cost_per_serving": 4.50,
+    "total_cost": 9.00,
+    "time_minutes": 25,
+    "description": "2 sentence description of the meal.",
+    "missing_ingredients": "any key ingredients not in the list that are needed (or 'None')"
+  }
+]
+
+Order meals from cheapest to most expensive. Be realistic with cost estimates based on average US grocery prices.`;
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": API_KEY,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+
+      const data = await response.json();
+      const text = data.content[0].text.replace(/```json|```/g, "").trim();
+      const meals = JSON.parse(text);
+      window._lastMeals = meals;
+      window._lastIngredients = ingredients;
+      window._lastServings = servings;
+      renderMeals(meals);
+
+    } catch (err) {
+      document.getElementById("results").innerHTML = `
+        <div class="error">Something went wrong. Please check your API key and try again.<br><small>${err.message}</small></div>`;
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Generate My Meal Plan →";
+  }
+
+  function renderMeals(meals) {
+    let html = `<p class="results-title">Your meal plan</p>`;
+    html += meals.map((meal, i) => `
+      <div class="meal-card ${i === 0 ? 'cheapest' : ''}" onclick="openRecipe(${i})">
+        <img class="meal-image" src="${getFoodImage(meal.name)}" alt="${meal.name}" loading="lazy" />
+        <div class="meal-body">
+          <div class="meal-badges">
+            ${i === 0 ? '<span class="badge badge-cheapest">Best Value</span>' : ''}
+            <span class="badge badge-time">${meal.time_minutes} min</span>
+            <span class="badge badge-click">Tap for full recipe →</span>
+          </div>
+          <h3>${meal.name}</h3>
+          <div class="meal-cost">
+            <span class="cost-main">$${parseFloat(meal.cost_per_serving).toFixed(2)}<span style="font-size:0.85rem;font-weight:400;color:var(--text-muted)">/serving</span></span>
+            <span class="cost-total">Total: $${parseFloat(meal.total_cost).toFixed(2)}</span>
+          </div>
+          <p class="meal-desc">${meal.description}</p>
+          ${meal.missing_ingredients !== "None"
+            ? `<div class="ingredients-needed">You may need: ${meal.missing_ingredients}</div>`
+            : `<div class="ingredients-have">✓ You have everything you need!</div>`}
+        </div>
+      </div>
+    `).join("");
+    document.getElementById("results").innerHTML = html;
+  }
+
+  async function openRecipe(index) {
+    const meal = window._lastMeals[index];
+    const ingredients = window._lastIngredients;
+    const servings = window._lastServings;
+    const imgUrl = getFoodImage(meal.name);
+
+    document.getElementById("modalContainer").innerHTML = `
+      <div class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal">
+          <img class="modal-image" src="${imgUrl}" alt="${meal.name}" />
+          <div class="modal-body">
+            <div class="modal-header">
+              <h2 class="modal-title">${meal.name}</h2>
+              <button class="modal-close" onclick="forceClose()">✕</button>
+            </div>
+            <div class="modal-meta">
+              <div class="modal-meta-item"><strong>${meal.time_minutes} min</strong>Cook time</div>
+              <div class="modal-meta-item"><strong>$${parseFloat(meal.cost_per_serving).toFixed(2)}</strong>Per serving</div>
+              <div class="modal-meta-item"><strong>${servings} person${servings > 1 ? 's' : ''}</strong>Servings</div>
+            </div>
+            <div class="modal-loading">
+              <div class="spinner"></div>
+              <p>Loading full recipe...</p>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    const recipePrompt = `Generate a complete recipe for "${meal.name}" using these available ingredients: ${ingredients}.
+Servings: ${servings}
+
+Return ONLY a JSON object (no markdown) in this exact format:
+{
+  "ingredients": [
+    {"amount": "2 cups", "item": "cooked rice"},
+    {"amount": "1 lb", "item": "chicken breast, diced"}
+  ],
+  "steps": [
+    "Step one instruction here.",
+    "Step two instruction here."
+  ]
+}
+
+Include 5-8 ingredients and 5-7 clear cooking steps. Be specific with amounts.`;
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": API_KEY,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: recipePrompt }]
+        })
+      });
+
+      const data = await response.json();
+      const text = data.content[0].text.replace(/```json|```/g, "").trim();
+      const recipe = JSON.parse(text);
+
+      const modalBody = document.querySelector(".modal-body");
+      modalBody.innerHTML = `
+        <div class="modal-header">
+          <h2 class="modal-title">${meal.name}</h2>
+          <button class="modal-close" onclick="forceClose()">✕</button>
+        </div>
+        <div class="modal-meta">
+          <div class="modal-meta-item"><strong>${meal.time_minutes} min</strong>Cook time</div>
+          <div class="modal-meta-item"><strong>$${parseFloat(meal.cost_per_serving).toFixed(2)}</strong>Per serving</div>
+          <div class="modal-meta-item"><strong>${servings} person${servings > 1 ? 's' : ''}</strong>Servings</div>
+        </div>
+        <div class="modal-section">
+          <h4>Ingredients</h4>
+          <ul class="ingredient-list">
+            ${recipe.ingredients.map(ing => `<li><span style="color:var(--text-muted);min-width:70px;display:inline-block;">${ing.amount}</span> ${ing.item}</li>`).join("")}
+          </ul>
+        </div>
+        <div class="modal-section">
+          <h4>Instructions</h4>
+          <ol class="steps-list">
+            ${recipe.steps.map(step => `<li>${step}</li>`).join("")}
+          </ol>
+        </div>`;
+
+    } catch (err) {
+      document.querySelector(".modal-loading").innerHTML = `<p style="color:#c0392b;">Could not load recipe. Please try again.</p>`;
+    }
+  }
+
+  function closeModal(e) {
+    if (e.target.classList.contains("modal-overlay")) {
+      document.getElementById("modalContainer").innerHTML = "";
+    }
+  }
+
+  function forceClose() {
+    document.getElementById("modalContainer").innerHTML = "";
+  }
+
+  updateUsesDisplay();
+</script>
+
+</body>
+</html>
